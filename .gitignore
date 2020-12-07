@@ -1,3 +1,7 @@
 .vscode/settings.json
 predictors/__pycache__/__init__.cpython-37.pyc
 predictors/__pycache__/predictor.cpython-37.pyc
+__pycache__/person.cpython-37.pyc
+predictors/__pycache__/actionpredictor.cpython-37.pyc
+predictors/__pycache__/freqpredictor.cpython-37.pyc
+predictors/__pycache__/posepredictor.cpython-37.pyc
