@@ -18,6 +18,9 @@ import time
 import person
 
 class ActionRecogniser():
+    """
+    Initialisation methods
+    """
     def __init__(self, report_action, report_freq, web_cam_num=0):
         self.report_action = report_action
         self.report_freq = report_freq
@@ -51,6 +54,9 @@ class ActionRecogniser():
             "RECORDING_FPS" : None,
         }
 
+    """
+    Setup Webcam methods
+    """
     def set_webcam_feed(self,):
         # set the webcama feed
         self.WEBCAM_FEED["WEBCAM"] = cv2.VideoCapture(self.web_cam_num)
@@ -119,6 +125,9 @@ class ActionRecogniser():
         fps = 1./period # average fps for N_test-1 periods.
         return fps
 
+    """
+    Run methods
+    """
     def run(self, ):
         # initialise:
         # setup the webcam_feed
@@ -127,8 +136,9 @@ class ActionRecogniser():
         # run loop
         while True:
             # collect frame
-            self.collect_and_store_frame()
+            frame = self.collect_and_store_frame()
             # pass to person
+            self.person.update_image_deque(frame)
             # pass pose to pose-predictor
             # convert pose deque to seq/matix
             # analysis/predict pose
@@ -141,24 +151,18 @@ class ActionRecogniser():
                 # predict action
                 print("report_action not implmented")
             # plot image with pose, freq and action
-            self.plot_person()
+            self.plot_person(just_image=False)
             # check for user input
             input = self.check_user_input()
             if input == 'break':
                 break
-
-
-    def creat_person(self, ) -> person:
-        # fully initialise a person object
-        temp_person = None #TODO: update with a person, once person is setup
-        print("creat_person not implmented")
-        return temp_person
 
     def collect_and_store_frame(self, ):
         # collect and store the next video frame
         # record webcam frame
         _, frame = self.WEBCAM_FEED["WEBCAM"].read()
         self.current_frame = frame
+        return frame
 
     def check_user_input(self, ) -> str:
         # checks for specific user inputs
@@ -170,6 +174,16 @@ class ActionRecogniser():
             self.WEBCAM_FEED["WEBCAM"].release()
             cv2.destroyAllWindows()
             return 'break'
+
+    """
+    Managing Person object methods
+    """
+
+    def creat_person(self, n_frames=32, n_padding=512) -> person:
+        # fully initialise a person object
+        temp_person = person.Person(n_frames=n_frames, n_padding=n_padding)
+        # fill the person with frames? #TODO: add prefill?
+        return temp_person
 
     def update_person(self, ):
         # updates the person with a new image
@@ -191,7 +205,7 @@ class ActionRecogniser():
         # predict action
         print("calculate_action not implmented")
 
-    def plot_person(self, just_image=True, user_person=None):
+    def plot_person(self, just_image=False, user_person=None):
         if just_image:
             # plot the image
             cv2.imshow('frame:', self.current_frame)
@@ -199,7 +213,8 @@ class ActionRecogniser():
             if user_person is None:
                 user_person = self.person
             # plot the image, pose, freq and action
-            print("plot_person not just_image not implmented")
+            overlay_image = user_person.get_person_overlay()
+            cv2.imshow('frame:', overlay_image)
 
 def main():
     action_recogniser = ActionRecogniser(
