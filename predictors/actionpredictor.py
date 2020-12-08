@@ -1,19 +1,24 @@
 """
 inherients from predictor
 """
+# Standard packages
+import tensorflow as tf
+import numpy as np
+import time
+from collections import deque
 
-#from predictors.predictor import Predictor
-from predictors import predictor
+# unique modules
+from predictor import Predictor
 
-class ActionPredictor(predictor.Predictor):
+class ActionPredictor(Predictor):
     # Inheriteted abstract methods
     def predict(self): pass
 
-    def transform(self): pass
+    # def transform(self): pass
 
-    def fit(self): pass
+    # def fit(self): pass
 
-    def fit_transform(self): pass
+    # def fit_transform(self): pass
 
     # methods
 

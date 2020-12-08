@@ -38,7 +38,7 @@ class Person():
         self.freq_deque_up_to_date = False
         self.action_deque_up_to_date = False
         # predictors
-        self.pose_predictor = None
+        self.pose_predictor = PosePredictor(num_threads=8)
         self.freq_predictor = None
         self.action_predictor = None
 
