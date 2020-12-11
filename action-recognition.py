@@ -11,6 +11,7 @@ import os
 import sys
 import re
 import cv2
+import matplotlib.pyplot as plt
 import numpy as np
 import time
 
@@ -29,6 +30,11 @@ class ActionRecogniser():
         self.init_webcam()
         # create person object
         self.person = self.creat_person()
+        # current frame
+        self.current_frame = None
+        # show the freq spectrum
+        self.show_spectrum = False
+        self.spectrum_figure = None
 
     def init_webcam(self, ):
         # webcam feed
@@ -45,7 +51,7 @@ class ActionRecogniser():
             "LIMIT_FRAME_RATE" : True,
             "LIMIT_METHOD" : 1,# 0 using the time difference to control the fps.
             # 1 using a fixed multipule of the camera frame rate. Effectively down sampling.
-            "FPS_LIMIT" : 10,
+            "FPS_LIMIT" : 6,
             "HARD_CODE_CAMERA_FPS" : False, # if you want to input the camera fps
             "CAMERA_FPS" : 30, # sets the hardcoded camera fps if used.
             "GUESS_FPS_STANDARD" : True, # uses the measured fps to compare to a standard list of fps values.
@@ -135,27 +141,38 @@ class ActionRecogniser():
         # person
         # run loop
         while True:
+            # record the loop time
+            start_time = time.time()
             # collect frame
             frame = self.collect_and_store_frame()
             # pass to person
             self.person.update_image_deque(frame)
             # pass pose to pose-predictor
+            self.person.update_pose_deque()
             # convert pose deque to seq/matix
             # analysis/predict pose
             if self.report_freq:
                 # pass pose-seq to freq-predictor
                 # predict freq
-                print("report_freq not implmented")
-            if self.report_freq:
+                self.person.update_freq_deque()
+            if self.report_action:
                 # pass pose-seq to action-predictor
                 # predict action
                 print("report_action not implmented")
+            # plot the freq spectrum
+            self.plot_spectrum()
             # plot image with pose, freq and action
-            self.plot_person(just_image=False)
+            self.plot_person(just_image=False, mirror=True)
             # check for user input
-            input = self.check_user_input()
-            if input == 'break':
+            user_input = self.check_user_input()
+            if user_input == 'show':
+                self.show_spectrum = True
+            if user_input == 'hide':
+                self.show_spectrum = False
+            elif user_input == 'break':
                 break
+            # report the loop duration
+            print(time.time()-start_time)
 
     def collect_and_store_frame(self, ):
         # collect and store the next video frame
@@ -168,6 +185,18 @@ class ActionRecogniser():
         # checks for specific user inputs
         # start
         # break
+        if cv2.waitKey(1) & 0XFF == ord('s'):
+            # & 0XFF truncats the last 8 bits, which then get compared to 'q'.
+            # exit the videocap loop if user enters 'q'
+            self.WEBCAM_FEED["WEBCAM"].release()
+            cv2.destroyAllWindows()
+            return 'show'
+        if cv2.waitKey(1) & 0XFF == ord('h'):
+            # & 0XFF truncats the last 8 bits, which then get compared to 'q'.
+            # exit the videocap loop if user enters 'q'
+            self.WEBCAM_FEED["WEBCAM"].release()
+            cv2.destroyAllWindows()
+            return 'hide'
         if cv2.waitKey(1) & 0XFF == ord('q'):
             # & 0XFF truncats the last 8 bits, which then get compared to 'q'.
             # exit the videocap loop if user enters 'q'
@@ -205,20 +234,54 @@ class ActionRecogniser():
         # predict action
         print("calculate_action not implmented")
 
-    def plot_person(self, just_image=False, user_person=None):
+    def plot_person(self, just_image=False, mirror=False, user_person=None):
         if just_image:
             # plot the image
-            cv2.imshow('frame:', self.current_frame)
+            overlay_image = self.current_frame
+            # if mirror:
+            #     overlay_image = self.x_reflected_image(overlay_image)
+            cv2.imshow('frame:', overlay_image)
         else:
             if user_person is None:
                 user_person = self.person
             # plot the image, pose, freq and action
-            overlay_image = user_person.get_person_overlay()
+            overlay_image = user_person.get_person_overlay(
+                report_freq=self.report_freq,
+                report_action=self.report_action,
+                use_model=False,
+                mirror=mirror,
+            )
+            # if mirror:
+            #     overlay_image = self.x_reflected_image(overlay_image)
             cv2.imshow('frame:', overlay_image)
+
+    def plot_spectrum(self, ):
+        if self.show_spectrum:
+            if self.spectrum_figure is None:
+                self.spectrum_figure = plt.subplots(2,1)
+                self.spectrum_figure[0].show()
+                self.spectrum_figure[0].canvas.draw()
+            for ax in self.spectrum_figure[1]:
+                ax.clear()
+            self.person.plot_freq_spectrum(self.spectrum_figure)
+            self.spectrum_figure[0].canvas.draw()
+        else:
+            if self.spectrum_figure is None:
+                return
+            else:
+                self.spectrum_figure[0].close() # close the spectrum
+                self.spectrum_figure = None
+
+    """
+    Static Methods
+    """
+    @staticmethod
+    def x_reflected_image(user_image: np.ndarray) -> np.ndarray:
+        return user_image[:,::-1,:]
 
 def main():
     action_recogniser = ActionRecogniser(
-        report_action=True,
+        report_action=False,
         report_freq=True,
         web_cam_num=0
     )

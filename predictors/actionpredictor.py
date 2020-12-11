@@ -8,7 +8,7 @@ import time
 from collections import deque
 
 # unique modules
-from predictor import Predictor
+from predictors.predictor import Predictor
 
 class ActionPredictor(Predictor):
     # Inheriteted abstract methods

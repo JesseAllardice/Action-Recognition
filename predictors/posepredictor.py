@@ -3,12 +3,13 @@ inherients from predictor
 """
 # Standard packages
 import time
+from collections import deque
 import numpy as np
 import tensorflow as tf
-# from collections import deque
+import cv2
 
 # unique modules
-from predictor import Predictor
+from predictors.predictor import Predictor
 
 class PosePredictor(Predictor):
     """
@@ -51,8 +52,14 @@ class PosePredictor(Predictor):
     """
     Inheriteted abstract methods
     """
-    def predict(self, data) -> np.ndarray:
-        pass
+    def predict(self, data: deque) -> np.ndarray:
+        # extract the image data and the input data
+        self.set_image_and_input(data)
+        # invoke model
+        self.invoke_pose_prediction(self.input_data)
+        # calculate the model and image positions
+        self.calculate_coordinates()
+        return self.image_positions
 
     # def transform(self): pass
 
@@ -63,6 +70,23 @@ class PosePredictor(Predictor):
     """
     Methods
     """
+    def set_image_and_input(self, data: deque):
+        # use only the most recent image
+        image = data[-1]
+        # set the image parameters, image, h and w
+        self.image = image
+        self.image_height, self.image_width, _ = image.shape
+        # extract the model's image size
+        model_img_size = (self.input_height, self.input_width)
+        # downsample the image to the size for the model input
+        image = cv2.resize(image, model_img_size, interpolation=cv2.INTER_LINEAR)
+        # add N dim
+        input_data = np.expand_dims(image, axis=0)
+        # rescale to [-1,1)
+        if self.floating_model:
+            input_data = (np.float32(input_data) - 127.5) / 127.5
+        self.input_data = input_data
+
     def predict_on_random(self) -> np.ndarray:
         # set the image_shape
         self.image_height = self.input_details[0]['shape'][1]
@@ -83,10 +107,10 @@ class PosePredictor(Predictor):
         # Set the tensors
         self.interpreter.set_tensor(self.input_details[0]["index"], input_data)
         # run inference
-        start_time = time.time()
+        #start_time = time.time()
         self.interpreter.invoke()
-        stop_time = time.time()
-        print('time: {:.3f}ms'.format((stop_time - start_time) * 1000))
+        #stop_time = time.time()
+        #print('time: {:.3f}ms'.format((stop_time - start_time) * 1000))
         # the function 'get_tensor()' returns a copy of the tensor data.
         # whereas, use 'tensor()' in order to get a pointer to the tensor.
         self.output_data = self.interpreter.get_tensor(self.output_details[0]["index"])
@@ -116,7 +140,7 @@ class PosePredictor(Predictor):
 
     def model_to_image_positions(self, model_positions: np.ndarray) -> np.ndarray:
         scaling_x = self.image_height / self.input_height
-        scaling_y = self.image_height / self.input_height
+        scaling_y = self.image_width / self.input_width
         scaling_matric = np.diag([scaling_x, scaling_y])
         image_positions = model_positions @ scaling_matric
         return image_positions
