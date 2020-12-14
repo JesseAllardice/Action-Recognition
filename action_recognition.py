@@ -208,9 +208,13 @@ class ActionRecogniser():
     Managing Person object methods
     """
 
-    def creat_person(self, n_frames=32, n_padding=512) -> person:
+    def creat_person(self, n_frames=32, n_padding=512, recording_fps=10) -> person:
         # fully initialise a person object
-        temp_person = person.Person(n_frames=n_frames, n_padding=n_padding)
+        temp_person = person.Person(
+            n_frames=n_frames,
+            n_padding=n_padding,
+            recording_fps=recording_fps
+        )
         # fill the person with frames? #TODO: add prefill?
         return temp_person
 
