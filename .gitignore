@@ -5,3 +5,7 @@ __pycache__/person.cpython-37.pyc
 predictors/__pycache__/actionpredictor.cpython-37.pyc
 predictors/__pycache__/freqpredictor.cpython-37.pyc
 predictors/__pycache__/posepredictor.cpython-37.pyc
+testing_nb.ipynb
+.pytest_cache/v/cache/nodeids
+.pytest_cache/v/cache/stepwise
+__pycache__/action_recognition.cpython-37.pyc

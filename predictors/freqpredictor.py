@@ -121,7 +121,7 @@ class FreqPredictor(Predictor):
             return np.fft.fft(user_ndarray, n=self.n_padding, axis=0)
 
     """
-    Sef Methods
+    Set Methods
     """
     def set_recording_fps(self, recording_fps):
         self.recording_fps = int(recording_fps)

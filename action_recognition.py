@@ -158,7 +158,7 @@ class ActionRecogniser():
             if self.report_action:
                 # pass pose-seq to action-predictor
                 # predict action
-                print("report_action not implmented")
+                self.person.update_action_deque()
             # plot the freq spectrum
             self.plot_spectrum()
             # plot image with pose, freq and action
@@ -262,7 +262,7 @@ class ActionRecogniser():
     def plot_spectrum(self, ):
         if self.show_spectrum:
             if self.spectrum_figure is None:
-                self.spectrum_figure = plt.subplots(2,1)
+                self.spectrum_figure = plt.subplots(2, 1)
                 self.spectrum_figure[0].show()
                 self.spectrum_figure[0].canvas.draw()
             for ax in self.spectrum_figure[1]:
@@ -285,7 +285,7 @@ class ActionRecogniser():
 
 def main():
     action_recogniser = ActionRecogniser(
-        report_action=False,
+        report_action=True,
         report_freq=True,
         web_cam_num=0
     )

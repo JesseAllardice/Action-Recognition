@@ -44,9 +44,12 @@ class Person():
             N_samples=n_frames,
             N_padding=n_padding,
             recording_fps=recording_fps,
-            freq_range=(0,300),
+            freq_range=(0, 300),
         )
-        self.action_predictor = None
+        self.action_predictor = ActionPredictor(
+            N_samples=n_frames,
+            recording_fps=recording_fps
+        )
 
     def set_image_deque(self, user_deque, propogate=False):
         self.image_deque = user_deque
@@ -110,7 +113,12 @@ class Person():
     def update_action_deque(self, ):
         if not self.action_deque_up_to_date:
             # predict action from pose_deque
-            pass
+            current_action = self.predict_action(self.pose_deque)
+            if self.action_deque is None:
+                # initialise the deque with this current_pose as an example
+                self.action_deque = self.init_deque(self.n_frames, current_action)
+            else: # add the pose to the deque
+                self.action_deque.append(current_action)
         self.action_deque_up_to_date = True
         # print("action deque is up to date")
 
@@ -124,7 +132,7 @@ class Person():
         return self.freq_predictor.predict(pose_deque)
 
     def predict_action(self, pose_deque) -> str:
-        pass
+        return self.action_predictor.predict(pose_deque)
 
     """
     Image maniplulation methods
@@ -173,7 +181,8 @@ class Person():
 
     def overlay_action(self, user_image) -> np.ndarray:
         temp_image = user_image
-        print("overlay_action not implemented.")
+        temp_action = self.get_action()
+        temp_image = self.overlay_action_text(temp_image, temp_action)
         return temp_image
 
     def get_person_overlay(self, report_freq, report_action, use_model=False, mirror=False) -> np.ndarray:
@@ -253,7 +262,26 @@ class Person():
         lineType               = 2
         cv2.putText(
             img,
-            str(int(freq[0])), # draws a "o" not a circle at the moment.
+            str(int(freq[0])),
+            bottomLeftCornerOfText,
+            font,
+            fontScale,
+            fontColor,
+            lineType
+        )
+        return img
+
+    @staticmethod
+    def overlay_action_text(img:np.ndarray, action) -> np.ndarray:
+        # Write some Text
+        font                   = cv2.FONT_HERSHEY_SIMPLEX
+        bottomLeftCornerOfText = (200,100)
+        fontScale              = 1
+        fontColor              = (55,55,55)
+        lineType               = 2
+        cv2.putText(
+            img,
+            str(action[0]),
             bottomLeftCornerOfText,
             font,
             fontScale,
@@ -263,7 +291,7 @@ class Person():
         return img
 
 def main():
-    test_person = Person(32, 512)
+    test_person = Person(32, 512, 10)
     # test the initialisation
     # run on some saved data
     print(test_person)
