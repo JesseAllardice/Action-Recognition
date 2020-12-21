@@ -1,0 +1,18 @@
+{
+    "datasets": [
+        {
+            "location": "C:\\Users\\jesse\\OneDrive\\Entrepreneurs First\\Adaptive Exergames\\Pose Estimation\\image_datasets",
+            "version_num": "v1",
+            "type": "images",
+            "users": ["JESSE-1810"],
+            "dates":["2020-11-11"],
+            "actions": [
+                "rest",
+                "punching",
+                "ROTS",
+                "squats",
+                "star_jumps"
+            ]
+        }
+    ]
+}
