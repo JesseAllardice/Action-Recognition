@@ -35,8 +35,12 @@ class ActionPredictor(Predictor):
         self.preprocess = None
         # action prediction model
         self.model = None
+        # classes list
+        self.classes_list = None
         # prep and model file
-        self.prep_and_model_file = "models\\actionnet_flat_linear_preprocess_and_model_10_fps.pickle"
+        #self.prep_and_model_file = "models\\actionnet_flat_linear_preprocess_and_model_10_fps.pickle"
+        self.prep_and_model_file = "models\\actionnet_dense_preprocess_and_model_10_fps.pickle"
+        
         # load the prep and model
         self.load_preprocessing_and_model(self.prep_and_model_file)
 
@@ -55,9 +59,14 @@ class ActionPredictor(Predictor):
         X = self.preprocess(self.kinetic, image_size=np.array([480, 640])) # TODO: get image_size from person object
         self.input_data = X
         # predict using the model
-        y_hat = self.model.predict(X)
-        self.action = y_hat[0]
-        return np.array([y_hat[0]])
+        if self.classes_list is None:
+            y_hat = self.model.predict(X)
+            self.action = y_hat[0]
+            return np.array([y_hat[0]])
+        else:
+            y_hat = np.argmax(self.model.predict(X))
+            self.action = self.classes_list[y_hat]
+            return np.array([self.action])
 
 
     # def transform(self): pass
@@ -74,7 +83,13 @@ class ActionPredictor(Predictor):
             data = pickle.load(f)
         function_code = marshal.loads(data["preprocess_function"])
         self.preprocess = types.FunctionType(function_code, globals(), 'preprocess')
-        self.model = data["model"]
+        if "model" in data.keys():
+            self.model = data["model"]
+        elif "model_path" in data.keys():
+            self.model = tf.keras.models.load_model(data["model_path"])
+            self.classes_list = data["classes_list"]
+        else:
+            raise Exception("No model specified for ActionPredictor.")
 
     def set_pose_specification(self, pose_example: np.ndarray):
         self.num_keypoints, self.dimension = pose_example.shape
