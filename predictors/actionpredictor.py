@@ -39,7 +39,7 @@ class ActionPredictor(Predictor):
         self.classes_list = None
         # prep and model file
         #self.prep_and_model_file = "models\\actionnet_flat_linear_preprocess_and_model_10_fps.pickle"
-        self.prep_and_model_file = "models\\actionnet_dense_preprocess_and_model_10_fps.pickle"
+        self.prep_and_model_file = "models\\actionnet_CNN_masked_preprocess_and_model_10_fps.pickle"
         
         # load the prep and model
         self.load_preprocessing_and_model(self.prep_and_model_file)
